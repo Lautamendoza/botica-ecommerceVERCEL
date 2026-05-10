@@ -1,9 +1,39 @@
 import { Category, Collection, PriceRange, Product, Tone } from './types';
 
 export const CATEGORIES: Category[] = [
-  { id: 'collares',  name: 'Collares',             count: 42, icon: 'necklace'  },
-  { id: 'cristales', name: 'Cristales & Piedras',  count: 68, icon: 'crystal'   },
-  { id: 'inciensos', name: 'Inciensos & Sahumerios',count: 31, icon: 'incense'  },
+  {
+    id: 'collares',
+    name: 'Collares',
+    count: 42,
+    icon: 'necklace',
+    subcategories: [
+      { id: 'collares-plata', name: 'Plata 925' },
+      { id: 'collares-oro', name: 'Baño de Oro' },
+      { id: 'collares-piedras', name: 'Con Piedras' },
+    ]
+  },
+  {
+    id: 'cristales',
+    name: 'Cristales & Piedras',
+    count: 68,
+    icon: 'crystal',
+    subcategories: [
+      { id: 'cristales-bruto', name: 'En Bruto' },
+      { id: 'cristales-pulidos', name: 'Pulidos' },
+      { id: 'cristales-sets', name: 'Sets de Sanación' },
+    ]
+  },
+  {
+    id: 'inciensos',
+    name: 'Inciensos & Sahumerios',
+    count: 31,
+    icon: 'incense',
+    subcategories: [
+      { id: 'inciensos-atados', name: 'Atados de Hierbas' },
+      { id: 'inciensos-resinas', name: 'Resinas Naturales' },
+      { id: 'inciensos-varitas', name: 'Varitas Clásicas' },
+    ]
+  },
   { id: 'velas',     name: 'Velas Rituales',        count: 24, icon: 'candle'   },
   { id: 'tarot',     name: 'Tarot & Oráculos',      count: 19, icon: 'tarot'    },
   { id: 'accesorios',name: 'Accesorios',            count: 37, icon: 'accessory'},

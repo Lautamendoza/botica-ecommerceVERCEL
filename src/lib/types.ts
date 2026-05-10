@@ -13,11 +13,18 @@ export interface Product {
   fav?: boolean;
 }
 
+export interface SubCategory {
+  id: string;
+  name: string;
+  count?: number;
+}
+
 export interface Category {
   id: string;
   name: string;
   count: number;
   icon: string;
+  subcategories?: SubCategory[];
 }
 
 export interface Collection {

@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { CATEGORIES, INTENTIONS, MATERIALS, PRICE_RANGES, PRODUCTS } from '@/lib/data';
 import Breadcrumb from '@/components/ui/Breadcrumb';
 import Icon from '@/components/ui/Icon';
@@ -14,7 +15,19 @@ type SortKey = 'relevance' | 'price-asc' | 'price-desc' | 'rating';
 type ViewMode = 'grid' | 'rows';
 
 export default function PLPClient({ cat }: PLPClientProps) {
+  return (
+    <Suspense fallback={<div>Cargando...</div>}>
+      <PLPInner cat={cat} />
+    </Suspense>
+  );
+}
+
+function PLPInner({ cat }: PLPClientProps) {
+  const searchParams = useSearchParams();
+  const sub = searchParams.get('sub');
+  
   const category = CATEGORIES.find(c => c.id === cat) ?? CATEGORIES[0];
+  const subCategory = category.subcategories?.find(s => s.id === sub);
 
   const [sort, setSort] = useState<SortKey>('relevance');
   const [priceSel, setPriceSel] = useState<string[]>([]);
@@ -28,6 +41,15 @@ export default function PLPClient({ cat }: PLPClientProps) {
 
   const filtered = useMemo(() => {
     let list = PRODUCTS.filter(p => p.cat === cat);
+
+    if (subCategory) {
+      const subName = subCategory.name.toLowerCase();
+      list = list.filter(p => 
+        p.tags.some(t => t.toLowerCase().includes(subName)) ||
+        p.label.toLowerCase().includes(subName)
+      );
+    }
+
     if (priceSel.length) {
       list = list.filter(p =>
         priceSel.some(id => {
@@ -51,7 +73,7 @@ export default function PLPClient({ cat }: PLPClientProps) {
     if (sort === 'price-desc') list = [...list].sort((a, b) => b.price - a.price);
     if (sort === 'rating') list = [...list].sort((a, b) => b.rating - a.rating);
     return list;
-  }, [cat, priceSel, matSel, intSel, onlyNew, sort]);
+  }, [cat, subCategory, priceSel, matSel, intSel, onlyNew, sort]);
 
   const activeFilters =
     priceSel.length + matSel.length + intSel.length + (onlyNew ? 1 : 0);
@@ -63,13 +85,21 @@ export default function PLPClient({ cat }: PLPClientProps) {
     setOnlyNew(false);
   };
 
+  const breadcrumbItems = [
+    { label: 'Inicio', href: '/' },
+    { label: category.name, href: sub ? `/categoria/${cat}` : undefined },
+  ];
+  if (subCategory) {
+    breadcrumbItems.push({ label: subCategory.name });
+  }
+
   return (
     <main className="plp">
-      <Breadcrumb items={[{ label: 'Inicio', href: '/' }, { label: category.name }]} />
+      <Breadcrumb items={breadcrumbItems} />
 
       <header className="plp-head">
-        <h1>{category.name}</h1>
-        <p>{filtered.length} piezas · seleccionadas a mano</p>
+        <h1>{subCategory ? subCategory.name : category.name}</h1>
+        <p>{filtered.length} {filtered.length === 1 ? 'pieza' : 'piezas'} · seleccionadas a mano</p>
       </header>
 
       <div className="plp-body">

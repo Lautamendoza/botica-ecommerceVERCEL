@@ -1,8 +1,10 @@
 'use client';
 
 import { useRouter, usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { useStore } from '@/store/useStore';
 import { CATEGORIES, COLLECTIONS } from '@/lib/data';
+import { Category } from '@/lib/types';
 import Icon from '@/components/ui/Icon';
 
 export default function CategoryDrawer() {
@@ -10,6 +12,14 @@ export default function CategoryDrawer() {
   const pathname = usePathname();
   const drawerOpen = useStore(s => s.drawerOpen);
   const setDrawerOpen = useStore(s => s.setDrawerOpen);
+  const [expandedCats, setExpandedCats] = useState<Set<string>>(new Set());
+
+  // Reset expanded categories when drawer closes
+  useEffect(() => {
+    if (!drawerOpen) {
+      setTimeout(() => setExpandedCats(new Set()), 300);
+    }
+  }, [drawerOpen]);
 
   const isActive = (catId: string) => pathname === `/categoria/${catId}`;
   const isCatalog = pathname === '/catalogo';
@@ -17,6 +27,23 @@ export default function CategoryDrawer() {
   const goTo = (path: string) => {
     router.push(path);
     setDrawerOpen(false);
+  };
+
+  const toggleExpand = (catId: string) => {
+    setExpandedCats(prev => {
+      const next = new Set(prev);
+      if (next.has(catId)) next.delete(catId);
+      else next.add(catId);
+      return next;
+    });
+  };
+
+  const handleCatClick = (c: Category) => {
+    if (c.subcategories && c.subcategories.length > 0) {
+      toggleExpand(c.id);
+    } else {
+      goTo(`/categoria/${c.id}`);
+    }
   };
 
   return (
@@ -60,19 +87,58 @@ export default function CategoryDrawer() {
 
           <div className="drawer-divider">Categorías</div>
           <ul>
-            {CATEGORIES.map(c => (
-              <li key={c.id}>
-                <button
-                  className={`drawer-link${isActive(c.id) ? ' active' : ''}`}
-                  onClick={() => goTo(`/categoria/${c.id}`)}
-                >
-                  <span className="dl-name">{c.name}</span>
-                  <span className="dl-meta">
-                    {c.count} <Icon name="chev-r" size={14} />
-                  </span>
-                </button>
-              </li>
-            ))}
+            {CATEGORIES.map(c => {
+              const isExpanded = expandedCats.has(c.id);
+              const hasSubs = c.subcategories && c.subcategories.length > 0;
+
+              return (
+                <li key={c.id} className="drawer-item-group">
+                  <button
+                    className={`drawer-link${isActive(c.id) ? ' active' : ''}${isExpanded ? ' expanded' : ''}`}
+                    onClick={() => handleCatClick(c)}
+                  >
+                    <span className="dl-name">{c.name}</span>
+                    <span className="dl-meta">
+                      {c.count} 
+                      {hasSubs ? (
+                        <span className="dl-chevron">
+                          <Icon name="chev-r" size={14} />
+                        </span>
+                      ) : (
+                        <Icon name="chev-r" size={14} />
+                      )}
+                    </span>
+                  </button>
+
+                  {hasSubs && (
+                    <div className={`submenu-wrapper${isExpanded ? ' expanded' : ''}`}>
+                      <div className="submenu-content">
+                        <ul>
+                          <li>
+                            <button
+                              className="drawer-link subtle"
+                              onClick={() => goTo(`/categoria/${c.id}`)}
+                            >
+                              <span className="dl-name">Ver todo</span>
+                            </button>
+                          </li>
+                          {c.subcategories?.map(sub => (
+                            <li key={sub.id}>
+                              <button
+                                className="drawer-link subtle"
+                                onClick={() => goTo(`/categoria/${c.id}?sub=${sub.id}`)}
+                              >
+                                <span className="dl-name">{sub.name}</span>
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
 
           <div className="drawer-divider">Colecciones</div>
